@@ -1,5 +1,4 @@
 import json
-import os
 import pytest
 from pathlib import Path
 
@@ -90,7 +89,7 @@ def test_delete_message(client):
 
 def test_search_post(client):
     """Ensure search query properly filters posts"""
-    response = client.get('/search/', query_string={"query": "first"})
+    response = client.get("/search/", query_string={"query": "first"})
     assert response.status_code == 200
     assert b"entry" not in response.data
 
