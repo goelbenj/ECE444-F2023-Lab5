@@ -3,7 +3,7 @@ import os
 import pytest
 from pathlib import Path
 
-from project.app import app, db
+from project.app import app, db, login_required
 
 TEST_DB = "test.db"
 
@@ -79,7 +79,11 @@ def test_messages(client):
 
 def test_delete_message(client):
     """Ensure the messages are being deleted"""
-    rv = client.get('/delete/1')
+    rv = client.get("/delete/1")
+    data = json.loads(rv.data)
+    assert data["status"] == 0
+    login(client, app.config["USERNAME"], app.config["PASSWORD"])
+    rv = client.get("/delete/1")
     data = json.loads(rv.data)
     assert data["status"] == 1
 
@@ -89,3 +93,14 @@ def test_search_post(client):
     response = client.get('/search/', query_string={"query": "first"})
     assert response.status_code == 200
     assert b"entry" not in response.data
+
+
+def test_login_wrapper(client):
+    @login_required
+    def _dummy_func():
+        return True
+
+    rv = login(client, app.config["USERNAME"], app.config["PASSWORD"])
+    assert b"You were logged in" in rv.data
+    with app.test_request_context():
+        assert _dummy_func()
